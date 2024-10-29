@@ -15,27 +15,30 @@ function init() {
     scene = new THREE.Scene();
     
     const aspect = window.innerWidth / window.innerHeight;
-    const frustumSize = 2.5;
     camera = new THREE.OrthographicCamera(
-        frustumSize * aspect / -2, 
-        frustumSize * aspect / 2, 
-        frustumSize / 2, 
-        frustumSize / -2, 
+        -aspect, 
+        aspect, 
+        1, 
+        -1, 
         1, 1000
     );
     camera.position.z = 10;
 
+    // Modified renderer initialization with pixel ratio support
     renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true
     });
+    const pixelRatio = Math.min(window.devicePixelRatio, 2);
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 1);
     document.body.appendChild(renderer.domElement);
 
+    // Modified render target initialization with pixel ratio
     renderTarget = new THREE.WebGLRenderTarget(
-        window.innerWidth,
-        window.innerHeight,
+        window.innerWidth * pixelRatio,
+        window.innerHeight * pixelRatio,
         {
             minFilter: THREE.LinearFilter,
             magFilter: THREE.LinearFilter,
@@ -48,7 +51,7 @@ function init() {
     const ringMaterial = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 0 },
-            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            resolution: { value: new THREE.Vector2(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio) },
             aspectRatio: { value: window.innerWidth / window.innerHeight }
         },
         vertexShader: `
@@ -135,7 +138,7 @@ function init() {
     const hazeMaterial = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: 0 },
-            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            resolution: { value: new THREE.Vector2(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio) },
             mousePosition: { value: new THREE.Vector2(0.5, 0.5) },
             intensity: { value: 0.0 },
             aspectRatio: { value: window.innerWidth / window.innerHeight },
@@ -251,21 +254,21 @@ function onTouchMove(event) {
 }
 
 function onWindowResize() {
+    const pixelRatio = Math.min(window.devicePixelRatio, 2);
     const aspect = window.innerWidth / window.innerHeight;
-    const frustumSize = 2.5;
     
-    camera.left = -frustumSize * aspect / -2;
-    camera.right = frustumSize * aspect / 2;
-    camera.top = frustumSize / 2;
-    camera.bottom = -frustumSize / 2;
+    camera.left = -aspect;
+    camera.right = aspect;
+    camera.top = 1;
+    camera.bottom = -1;
     camera.updateProjectionMatrix();
     
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderTarget.setSize(window.innerWidth, window.innerHeight);
+    renderTarget.setSize(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     
-    ring.material.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+    ring.material.uniforms.resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     ring.material.uniforms.aspectRatio.value = aspect;
-    hazeLayer.material.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+    hazeLayer.material.uniforms.resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     hazeLayer.material.uniforms.aspectRatio.value = aspect;
 }
 
